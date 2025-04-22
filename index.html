@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fixed Prize Wheel</title>
+  <title>Prize Wheel</title>
   <style>
     body {
       background: #fefefe;
@@ -13,6 +13,7 @@
       justify-content: center;
       height: 100vh;
       font-family: sans-serif;
+      overflow: hidden;
     }
 
     .wheel-container {
@@ -21,7 +22,7 @@
       height: 500px;
     }
 
-    canvas {
+    canvas#wheel {
       width: 100%;
       height: 100%;
       border-radius: 50%;
@@ -37,6 +38,7 @@
       border-top: 20px solid transparent;
       border-bottom: 20px solid transparent;
       border-left: 20px solid #333;
+      z-index: 2;
     }
 
     #spinButton {
@@ -61,8 +63,18 @@
     }
 
     #popup img {
-      width: 300px;
+      width: 800px;
       margin-top: 10px;
+    }
+
+    canvas#confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 5;
     }
   </style>
 </head>
@@ -75,10 +87,13 @@
   <button id="spinButton">Spin the Wheel</button>
 
   <div id="popup">
-    <p>🎉💖 Surprise! You landed on <strong>15 August</strong>! 💖🎆</p>
+    <p>You landed on <strong>15 August</strong>!</p>
     <img src="picture.png" alt="Celebration" />
   </div>
 
+  <canvas id="confetti-canvas"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
@@ -127,19 +142,20 @@
       hasSpun = true;
       spinButton.disabled = true;
 
-      const targetSegment = 3; // "15 August"
-      const fullSpins = 5; // Total full spins before landing
-      const targetRotation = (segments.length - targetSegment) * segmentAngle;
-      const totalRotation = (2 * Math.PI * fullSpins) + targetRotation;
+      const targetSegment = segments.indexOf("15 August");
+      const fullSpins = 5;
+      const centerOffset = segmentAngle / 2;
+      const segmentOffset = segmentAngle * targetSegment;
+      const totalRotation = (2 * Math.PI * fullSpins) + (2 * Math.PI - segmentOffset - centerOffset);
 
       let start = rotation;
-      let duration = 3000;
+      let duration = 10000; // 10 seconds
       let startTime = null;
 
       function animate(timestamp) {
         if (!startTime) startTime = timestamp;
         const progress = timestamp - startTime;
-        const easeOut = 1 - Math.pow(1 - progress / duration, 4);
+        const easeOut = 1 - Math.pow(1 - progress / duration, 3); // Smooth easing
         rotation = start + (totalRotation - start) * easeOut;
 
         ctx.clearRect(0, 0, 500, 500);
@@ -153,11 +169,27 @@
         if (progress < duration) {
           requestAnimationFrame(animate);
         } else {
-          popup.style.display = "block";
+          showPopup();
+          launchConfetti();
         }
       }
 
       requestAnimationFrame(animate);
+    }
+
+    function showPopup() {
+      popup.style.display = "block";
+    }
+
+    function launchConfetti() {
+      const confettiCanvas = document.getElementById("confetti-canvas");
+      const confettiInstance = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+
+      confettiInstance({
+        particleCount: 200,
+        spread: 120,
+        origin: { y: 0.6 }
+      });
     }
 
     spinButton.addEventListener("click", spinWheel);
