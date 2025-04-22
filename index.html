@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pastel Spinning Wheel</title>
+  <title>Fixed Prize Wheel</title>
   <style>
     body {
       background: #fefefe;
@@ -75,8 +75,8 @@
   <button id="spinButton">Spin the Wheel</button>
 
   <div id="popup">
-    <p>🎉 You've spun 10 times!</p>
-    <img src="picture.png" alt="Popup Image" />
+    <p>🎉💖 Surprise! You landed on <strong>15 August</strong>! 💖🎆</p>
+    <img src="picture.png" alt="Celebration" />
   </div>
 
   <script>
@@ -97,7 +97,6 @@
 
     let anglePerSegment = (2 * Math.PI) / segments.length;
     let rotation = 0;
-    let totalSpins = 0;
     let hasSpun = false;
 
     function drawWheel() {
@@ -109,7 +108,7 @@
         ctx.lineTo(250, 250);
         ctx.fill();
 
-        // Draw text
+        // Text
         ctx.save();
         ctx.translate(250, 250);
         ctx.rotate(anglePerSegment * (i + 0.5));
@@ -124,14 +123,15 @@
     drawWheel();
 
     function spinWheel() {
-      if (hasSpun) return; // only allow one spin
+      if (hasSpun) return;
       hasSpun = true;
       spinButton.disabled = true;
 
-      let spinDegrees = Math.floor(Math.random() * 360) + 1440; // 4+ full spins
-      let spinRadians = spinDegrees * Math.PI / 180;
+      const targetSegment = 3; // "15 August"
+      const offset = Math.PI / 2; // Align with pointer at top
+      const finalAngle = (2 * Math.PI * 5) + (Math.PI * 2 - (anglePerSegment * targetSegment) - offset);
+
       let start = rotation;
-      let end = rotation + spinRadians;
       let duration = 3000;
       let startTime = null;
 
@@ -139,7 +139,8 @@
         if (!startTime) startTime = timestamp;
         let progress = timestamp - startTime;
         let easeOut = 1 - Math.pow(1 - progress / duration, 3); // ease-out
-        rotation = start + (end - start) * easeOut;
+        rotation = start + (finalAngle - start) * easeOut;
+
         ctx.clearRect(0, 0, 500, 500);
         ctx.save();
         ctx.translate(250, 250);
@@ -151,10 +152,7 @@
         if (progress < duration) {
           requestAnimationFrame(animate);
         } else {
-          totalSpins++;
-          if (totalSpins === 10) {
-            popup.style.display = "block";
-          }
+          popup.style.display = "block";
         }
       }
 
