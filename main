@@ -55,7 +55,7 @@
 
   <div id="popup">
     <p>🎉 Surprise! You spun 10 times!</p>
-    <img src="your-image.png" alt="Popup Image" />
+    <img src="picture.png" alt="Popup Image" />
   </div>
 
   <script>
