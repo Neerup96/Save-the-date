@@ -3,36 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spinning Wheel</title>
+  <title>Pastel Spinning Wheel</title>
   <style>
     body {
+      background: #fefefe;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: #f5f5f5;
       font-family: sans-serif;
     }
 
-    #wheel {
-      width: 300px;
-      height: 300px;
-      border: 10px solid #444;
+    .wheel-container {
+      position: relative;
+      width: 500px;
+      height: 500px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
-      background: conic-gradient(
-        red 0% 25%, 
-        yellow 25% 50%, 
-        green 50% 75%, 
-        blue 75% 100%
-      );
-      transition: transform 3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .pointer {
+      position: absolute;
+      top: 50%;
+      right: -20px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 20px solid transparent;
+      border-bottom: 20px solid transparent;
+      border-left: 20px solid #333;
     }
 
     #spinButton {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
+      margin-top: 30px;
+      padding: 12px 24px;
+      font-size: 20px;
       cursor: pointer;
     }
 
@@ -47,17 +57,21 @@
       padding: 20px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
       text-align: center;
+      z-index: 10;
     }
 
     #popup img {
-      width: 500px;
+      width: 300px;
       margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <div id="wheel"></div>
+  <div class="wheel-container">
+    <canvas id="wheel" width="500" height="500"></canvas>
+    <div class="pointer"></div>
+  </div>
   <button id="spinButton">Spin the Wheel</button>
 
   <div id="popup">
@@ -66,25 +80,85 @@
   </div>
 
   <script>
-    const wheel = document.getElementById("wheel");
-    const button = document.getElementById("spinButton");
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const spinButton = document.getElementById("spinButton");
     const popup = document.getElementById("popup");
+
+    const segments = [
+      "15 Juli", "20 Juli", "2 August", "15 August",
+      "18 August", "20 August", "26 August", "29 August", "02 September"
+    ];
+
+    const pastelColors = [
+      "#FFCDD2", "#F8BBD0", "#E1BEE7", "#D1C4E9",
+      "#C5CAE9", "#B2DFDB", "#C8E6C9", "#FFF9C4", "#FFE0B2"
+    ];
+
+    let anglePerSegment = (2 * Math.PI) / segments.length;
+    let rotation = 0;
     let totalSpins = 0;
-    let currentRotation = 0;
 
-    button.addEventListener("click", () => {
-      const spinDegrees = Math.floor(Math.random() * 360) + 720;
-      currentRotation += spinDegrees;
-      wheel.style.transform = `rotate(${currentRotation}deg)`;
-      totalSpins++;
+    function drawWheel() {
+      for (let i = 0; i < segments.length; i++) {
+        ctx.beginPath();
+        ctx.moveTo(250, 250);
+        ctx.fillStyle = pastelColors[i % pastelColors.length];
+        ctx.arc(250, 250, 250, anglePerSegment * i, anglePerSegment * (i + 1));
+        ctx.lineTo(250, 250);
+        ctx.fill();
 
-      if (totalSpins === 10) {
-        setTimeout(() => {
-          popup.style.display = "block";
-        }, 3100); // Show popup after wheel stops
+        // Draw text
+        ctx.save();
+        ctx.translate(250, 250);
+        ctx.rotate(anglePerSegment * (i + 0.5));
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#333";
+        ctx.font = "18px sans-serif";
+        ctx.fillText(segments[i], 230, 10);
+        ctx.restore();
       }
-    });
+    }
+
+    drawWheel();
+
+    function spinWheel() {
+      let spinDegrees = Math.floor(Math.random() * 360) + 1440; // 4+ full spins
+      let spinRadians = spinDegrees * Math.PI / 180;
+      let start = rotation;
+      let end = rotation + spinRadians;
+      let duration = 3000;
+      let startTime = null;
+
+      function animate(timestamp) {
+        if (!startTime) startTime = timestamp;
+        let progress = timestamp - startTime;
+        let easeOut = 1 - Math.pow(1 - progress / duration, 3); // ease-out cubic
+        rotation = start + (end - start) * easeOut;
+        ctx.clearRect(0, 0, 500, 500);
+        ctx.save();
+        ctx.translate(250, 250);
+        ctx.rotate(rotation);
+        ctx.translate(-250, -250);
+        drawWheel();
+        ctx.restore();
+
+        if (progress < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          totalSpins++;
+          if (totalSpins === 10) {
+            popup.style.display = "block";
+          }
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    spinButton.addEventListener("click", spinWheel);
   </script>
 
 </body>
 </html>
+
