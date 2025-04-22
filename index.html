@@ -30,7 +30,7 @@
     .pointer {
       position: absolute;
       top: 50%;
-      right: -20px;
+      left: 500px;
       transform: translateY(-50%);
       width: 0;
       height: 0;
@@ -76,7 +76,7 @@
 
   <div id="popup">
     <p>🎉💖 Surprise! You landed on <strong>15 August</strong>! 💖🎆</p>
-    <img src="picture.png" alt="Celebration" />
+    <img src="0ceca1b6-11a6-4981-b9d6-49f787ddc732.png" alt="Celebration" />
   </div>
 
   <script>
@@ -95,7 +95,7 @@
       "#C5CAE9", "#B2DFDB", "#C8E6C9", "#FFF9C4", "#FFE0B2"
     ];
 
-    let anglePerSegment = (2 * Math.PI) / segments.length;
+    const segmentAngle = (2 * Math.PI) / segments.length;
     let rotation = 0;
     let hasSpun = false;
 
@@ -104,14 +104,14 @@
         ctx.beginPath();
         ctx.moveTo(250, 250);
         ctx.fillStyle = pastelColors[i % pastelColors.length];
-        ctx.arc(250, 250, 250, anglePerSegment * i, anglePerSegment * (i + 1));
+        ctx.arc(250, 250, 250, segmentAngle * i, segmentAngle * (i + 1));
         ctx.lineTo(250, 250);
         ctx.fill();
 
         // Text
         ctx.save();
         ctx.translate(250, 250);
-        ctx.rotate(anglePerSegment * (i + 0.5));
+        ctx.rotate(segmentAngle * (i + 0.5));
         ctx.textAlign = "right";
         ctx.fillStyle = "#333";
         ctx.font = "18px sans-serif";
@@ -128,8 +128,9 @@
       spinButton.disabled = true;
 
       const targetSegment = 3; // "15 August"
-      const offset = Math.PI / 2; // Align with pointer at top
-      const finalAngle = (2 * Math.PI * 5) + (Math.PI * 2 - (anglePerSegment * targetSegment) - offset);
+      const fullSpins = 5; // Total full spins before landing
+      const targetRotation = (segments.length - targetSegment) * segmentAngle;
+      const totalRotation = (2 * Math.PI * fullSpins) + targetRotation;
 
       let start = rotation;
       let duration = 3000;
@@ -137,9 +138,9 @@
 
       function animate(timestamp) {
         if (!startTime) startTime = timestamp;
-        let progress = timestamp - startTime;
-        let easeOut = 1 - Math.pow(1 - progress / duration, 3); // ease-out
-        rotation = start + (finalAngle - start) * easeOut;
+        const progress = timestamp - startTime;
+        const easeOut = 1 - Math.pow(1 - progress / duration, 4);
+        rotation = start + (totalRotation - start) * easeOut;
 
         ctx.clearRect(0, 0, 500, 500);
         ctx.save();
